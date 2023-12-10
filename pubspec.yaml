@@ -1,0 +1,65 @@
+name: flutter_image_editor
+description: "A new Flutter project."
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.3 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  permission_handler: ^11.1.0
+  file_picker: ^6.1.1
+  image_picker: ^1.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+  shaders:
+    - shaders/brightness.frag
+    - shaders/bulge_distortion.frag
+    - shaders/cga_colorspace.frag
+    - shaders/color_invert.frag
+    - shaders/color_matrix.frag
+    - shaders/contrast.frag
+    - shaders/crosshatch.frag
+    - shaders/exposure.frag
+    - shaders/false_color.frag
+    - shaders/gamma.frag
+    - shaders/glass_sphere.frag
+    - shaders/grayscale.frag
+    - shaders/hald_lookup.frag
+    - shaders/halftone.frag
+    - shaders/haze.frag
+    - shaders/highlight_shadow.frag
+    - shaders/hue.frag
+    - shaders/kuwahara.frag
+    - shaders/lookup.frag
+    - shaders/luminance.frag
+    - shaders/luminance_threshold.frag
+    - shaders/monochrome.frag
+    - shaders/none.frag
+    - shaders/opacity.frag
+    - shaders/pixelation.frag
+    - shaders/posterize.frag
+    - shaders/rgb.frag
+    - shaders/saturation.frag
+    - shaders/sharpness.frag
+    - shaders/solarize.frag
+    - shaders/swirl.frag
+    - shaders/vibrance.frag
+    - shaders/vignette.frag
+    - shaders/white_balance.frag
+    - shaders/zoom_blur.frag
