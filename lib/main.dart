@@ -161,53 +161,85 @@ class _TransformableImageCanvasState extends State<TransformableImageCanvas> {
 
   GlobalKey _repaintBoundaryKey = GlobalKey();
 
+  Matrix4 getTransformationMatrix() {
+    // Create a new matrix for transformations
+    final matrix = Matrix4.identity();
+    // Translate to center the transformations around the image center
+    matrix.translate(widget.canvasWidth / 2, widget.canvasHeight / 2);
+    // Apply the rotation
+    matrix.rotateZ(_rotation);
+    // Apply the scale
+    matrix.scale(_scale, _scale);
+    // Translate back after transformations
+    matrix.translate(-widget.canvasWidth / 2, -widget.canvasHeight / 2);
+    // Apply the final translation
+    matrix.translate(_position.dx, _position.dy);
+    return matrix;
+  }
+
+  // Assuming you have a GlobalKey for your widget that you want to export.
+  GlobalKey _globalKey = GlobalKey();
+
+  // Define the main algorithm for saving the transformed image.
+  Future<void> _saveImage() async {
+    // Step 1: Obtain the pixel ratio of the device to ensure the image has the correct resolution.
+    final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    // Step 2: Get the size of the widget on the screen after layout.
+    final RenderBox renderBox = _globalKey.currentContext?.findRenderObject() as RenderBox;
+    final Size size = renderBox.size;
+
+    // Step 3: Calculate the scale factor that has been applied by the parent widget (like FittedBox).
+    final double scaleX = (size.width * pixelRatio) / widget.canvasWidth;
+    final double scaleY = (size.height * pixelRatio) / widget.canvasHeight;
+    final double actualScale = min(scaleX, scaleY);
+
+    // Step 4: Calculate the final size of the canvas considering the device pixel ratio and actual scale.
+    final int finalCanvasWidth = (widget.canvasWidth * actualScale).floor();
+    final int finalCanvasHeight = (widget.canvasHeight * actualScale).floor();
+
+    // Step 5: Create a PictureRecorder to capture the canvas drawing operations.
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, finalCanvasWidth.toDouble(), finalCanvasHeight.toDouble()));
+
+    // Step 6: Set the background color of the canvas to gray.
+    canvas.drawColor(Colors.grey, BlendMode.src);
+
+    // Step 7: Calculate the transformation matrix, adjusting for the scale, rotation, and translation.
+    final Matrix4 transformationMatrix = Matrix4.identity()
+      ..translate(finalCanvasWidth / 2.0, finalCanvasHeight / 2.0)
+      ..scale(_initialScale * _scale * actualScale, _initialScale * _scale * actualScale)
+      ..rotateZ(_rotation)
+      ..translate(-widget.imageWidth / 2.0, -widget.imageHeight / 2.0)
+      ..translate(_position.dx * actualScale, _position.dy * actualScale);
+
+    // Step 8: Draw the image onto the canvas using the transformation matrix.
+    final paint = Paint();
+    canvas.save();
+    canvas.transform(transformationMatrix.storage);
+    canvas.drawImage(image, Offset.zero, paint);
+    canvas.restore();
+
+    // Step 9: Complete the drawing and convert the canvas to an image.
+    final renderedImage = await recorder.endRecording().toImage(finalCanvasWidth, finalCanvasHeight);
+
+    // Step 10: Convert the image to a byte array in PNG format.
+    final byteData = await renderedImage.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = byteData?.buffer.asUint8List();
+
+    // Step 11: Save the image to the device's photo gallery.
+    if (pngBytes != null) {
+      final result = await ImageGallerySaver.saveImage(pngBytes, name: 'Output.png');
+      print('Image saved: $result');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          try {
-            RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!
-                .findRenderObject() as RenderRepaintBoundary;
-            ui.Image image = await boundary.toImage(pixelRatio: 1.0);
-            ByteData? byteData =
-                await image.toByteData(format: ui.ImageByteFormat.png);
-            Uint8List pngBytes = byteData!.buffer.asUint8List();
-            try {
-              await ImageGallerySaver.saveImage(pngBytes!, name: 'Output.png');
-            } catch (e) {
-              if (kDebugMode) {
-                print(e);
-              }
-            }
-            print('Image saved');
-          } catch (e) {
-            print(e.toString());
-          }
-          return;
-          ui.PictureRecorder recorder = ui.PictureRecorder();
-          Size size = Size(widget.canvasHeight, widget.canvasHeight);
-          Canvas canvas = Canvas(recorder);
-          final painter = EditorImagePainter1(
-              image: image, offset: _position, angle: _rotation, scale: _scale);
-          painter.paint(canvas, size);
-          ui.Image renderedImage = await recorder
-              .endRecording()
-              .toImage(size.width.floor(), size.height.floor());
-
-          // Convert the image to a byte array
-          final byteData =
-              await renderedImage.toByteData(format: ui.ImageByteFormat.png);
-          final pngBytes = byteData?.buffer.asUint8List();
-
-          try {
-            await ImageGallerySaver.saveImage(pngBytes!, name: 'Output.png');
-          } catch (e) {
-            if (kDebugMode) {
-              print(e);
-            }
-          }
-          print('Image saved');
+        await _saveImage();
         },
         child: const Icon(Icons.save),
       ),
@@ -221,6 +253,7 @@ class _TransformableImageCanvasState extends State<TransformableImageCanvas> {
               onScaleUpdate: _onScaleUpdate,
               onScaleEnd: _onScaleEnd,
               child: Container(
+                key: _globalKey,
                 color: Colors.grey,
                 width: widget.canvasWidth,
                 height: widget.canvasHeight,
