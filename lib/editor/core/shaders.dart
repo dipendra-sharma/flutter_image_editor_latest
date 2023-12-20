@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_image_editor/editor/core/transformation.dart';

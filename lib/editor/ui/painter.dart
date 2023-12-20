@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:color_filter_extension/color_filter_extension.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_image_editor/editor/utils.dart';
 
@@ -54,7 +55,15 @@ class EditorImagePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawImage(image, Offset.zero, Paint());
+    final paint = Paint();
+    paint.colorFilter = ColorFilterExt.merged([
+      ColorFilterExt.brightness(0.0),
+      ColorFilterExt.saturation(0.0),
+      ColorFilterExt.hue(0.0),
+      ColorFilterExt.invert(),
+      ColorFilterExt.grayscale(),
+    ]);
+    canvas.drawImage(image, Offset.zero, paint);
   }
 
   @override

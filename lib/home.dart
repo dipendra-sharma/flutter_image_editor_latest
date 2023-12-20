@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 import 'dart:ui';
 
@@ -34,63 +32,39 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              Editor.shared.undo();
-            },
-            child: const Icon(Icons.undo),
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              Editor.shared.redo();
-            },
-            child: const Icon(Icons.redo),
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              Editor.shared.reset();
-            },
-            child: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
       appBar: AppBar(
         title: const Text('Image Editor'),
         actions: const [],
       ),
       body: SafeArea(
           child: Column(
-            children: [
-              ValueListenableBuilder<Image>(
-                  valueListenable: Editor.shared.currentImage,
-                  builder: (context, image, _) {
-                    return EditorImagePreview(image: image);
-                  }),
-              const Spacer(),
-              ValueListenableBuilder<double>(
-                  valueListenable: sharpness,
-                  builder: (context, value, _) {
-                    return Slider(
-                        value: value,
-                        max: 1,
-                        min: -1,
-                        divisions: 20,
-                        onChanged: (changed) async {
-                          Editor.shared.applyTransformation(
-                              BrightnessTransformation(
-                                  brightnessShader: (await Editor.shared
-                                      .getFragmentProgram(Shaders.brightness))
-                                      .fragmentShader(),
-                                  brightness: changed));
-                          sharpness.value = changed;
-                        });
-                  }),
-              const Spacer()
-            ],
-          )),
+        children: [
+          ValueListenableBuilder<Image>(
+              valueListenable: Editor.shared.currentImage,
+              builder: (context, image, _) {
+                return EditorImagePreview(image: image);
+              }),
+          const Spacer(),
+          ValueListenableBuilder<double>(
+              valueListenable: sharpness,
+              builder: (context, value, _) {
+                return Slider(
+                    value: value,
+                    max: 1,
+                    min: -1,
+                    divisions: 20,
+                    onChanged: (changed) async {
+                      Editor.shared.applyTransformation(
+                          BrightnessTransformation(
+                              brightness: changed,
+                              brightnessShader:
+                                  widget.fragmentProgram.fragmentShader()));
+                      sharpness.value = changed;
+                    });
+              }),
+          const Spacer()
+        ],
+      )),
     );
   }
 }
