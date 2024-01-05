@@ -19,7 +19,7 @@ mixin ShadersTransformation on Transformation {
     Size size = Size(image.width.toDouble(), image.height.toDouble());
     Canvas canvas = Canvas(recorder);
     final painter =
-        ShaderPainter(shader: shader, uniforms: uniforms, image: image);
+        ImageShaderPainter(shader: shader, uniforms: uniforms, image: image);
     painter.paint(canvas, size);
     Image renderedImage = await recorder
         .endRecording()

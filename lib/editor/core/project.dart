@@ -25,7 +25,7 @@ class Project {
       _currentPosition--;
     }
     _addOperation(transformation);
-    transformation.apply(currentImage.value).then((value) => currentImage.value = value);
+    transformation.apply(originalImage).then((value) => currentImage.value = value);
   }
 
   Future<void> applyPreset(Preset preset) async {

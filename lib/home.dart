@@ -3,26 +3,18 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
-import 'package:flutter_image_editor/transformations/brightness.dart';
-
-import 'editor/constants.dart';
-import 'editor/core/editor.dart';
-import 'editor/ui/preview.dart';
+import 'package:flutter_image_editor/editor/ui/painter.dart';
+import 'package:flutter_image_editor/main.dart';
 
 class HomePage extends StatefulWidget {
-  final Image image;
-  final FragmentProgram fragmentProgram;
-
-  const HomePage(
-      {super.key, required this.image, required this.fragmentProgram});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final imageStream = StreamController<Image>();
-  final sharpness = ValueNotifier(0.0);
+  final uniformNotifier = ValueNotifier(0.0);
 
   @override
   void initState() {
@@ -39,27 +31,33 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
           child: Column(
         children: [
-          ValueListenableBuilder<Image>(
-              valueListenable: Editor.shared.currentImage,
-              builder: (context, image, _) {
-                return EditorImagePreview(image: image);
+          ValueListenableBuilder<double>(
+              valueListenable: uniformNotifier,
+              builder: (context, value, _) {
+                return FittedBox(
+                    fit: BoxFit.contain,
+                    child: CustomPaint(
+                      painter: ImageShaderPainter(
+                          image: image,
+                          shader: fragmentProgram.fragmentShader(),
+                          uniforms: [value]),
+                      size: Size(
+                        image.width.toDouble(),
+                        image.height.toDouble(),
+                      ),
+                    ));
               }),
           const Spacer(),
           ValueListenableBuilder<double>(
-              valueListenable: sharpness,
+              valueListenable: uniformNotifier,
               builder: (context, value, _) {
                 return Slider(
                     value: value,
                     max: 1,
-                    min: -1,
-                    divisions: 20,
+                    min: 0,
+                    divisions: 100,
                     onChanged: (changed) async {
-                      Editor.shared.applyTransformation(
-                          BrightnessTransformation(
-                              brightness: changed,
-                              brightnessShader:
-                                  widget.fragmentProgram.fragmentShader()));
-                      sharpness.value = changed;
+                      uniformNotifier.value = changed;
                     });
               }),
           const Spacer()

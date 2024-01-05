@@ -1,22 +1,22 @@
 import 'dart:ui';
-
-import 'package:color_filter_extension/color_filter_extension.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart' hide Image, Gradient;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_image_editor/editor/utils.dart';
 
-class ShaderPainter extends CustomPainter {
-  final Image? image;
+class ImageShaderPainter extends CustomPainter {
+  final Image image;
   final FragmentShader shader;
   final Iterable<double> uniforms;
 
-  ShaderPainter(
+  ImageShaderPainter(
       {super.repaint,
       required this.shader,
-      this.image,
+      required this.image,
       required this.uniforms});
 
   @override
-  bool shouldRepaint(ShaderPainter oldDelegate) =>
+  bool shouldRepaint(ImageShaderPainter oldDelegate) =>
       image != oldDelegate.image || shader != oldDelegate.shader;
 
   @override
@@ -24,10 +24,14 @@ class ShaderPainter extends CustomPainter {
     [...uniforms, size.width, size.height].forEachIndexed((index, value) {
       shader.setFloat(index, value);
     });
-    if (image != null) {
-      shader.setImageSampler(0, image!);
-    }
-    final paint = Paint()..shader = shader;
+    shader.setImageSampler(0, image);
+      final paint = Paint()..shader = ui.Gradient.radial( Offset(size.width / 2, size.height / 2),
+          size.width / 3,
+          [Colors.transparent, Colors.blue],
+          [0.0, 1.0],
+          TileMode.clamp,
+          null,
+          Offset(size.width / 4, size.height / 4));
 
     var vertices = Vertices(
       VertexMode.triangleStrip,
@@ -56,13 +60,6 @@ class EditorImagePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
-    paint.colorFilter = ColorFilterExt.merged([
-      ColorFilterExt.brightness(0.0),
-      ColorFilterExt.saturation(0.0),
-      ColorFilterExt.hue(0.0),
-      ColorFilterExt.invert(),
-      ColorFilterExt.grayscale(),
-    ]);
     canvas.drawImage(image, Offset.zero, paint);
   }
 
